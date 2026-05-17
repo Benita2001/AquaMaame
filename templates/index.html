@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaMaame</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #0a0a0a;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00d4aa;
+        }
+
+        .header p {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            background: #111;
+            font-size: 12px;
+            color: #00d4aa;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00d4aa;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .alert-banner {
+            display: none;
+            background: #ff3333;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 16px;
+            animation: flash 1s infinite;
+        }
+
+        .alert-banner.show { display: block; }
+
+        @keyframes flash {
+            0%, 100% { background: #ff3333; }
+            50% { background: #cc0000; }
+        }
+
+        .sensors {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 20px;
+        }
+
+        .sensor-card {
+            background: #111;
+            border-radius: 16px;
+            padding: 16px 12px;
+            text-align: center;
+            border: 1px solid #1a1a1a;
+        }
+
+        .sensor-card.danger {
+            border-color: #ff3333;
+            background: #1a0000;
+        }
+
+        .sensor-card.safe {
+            border-color: #00d4aa;
+        }
+
+        .sensor-icon { font-size: 24px; margin-bottom: 8px; }
+        
+        .sensor-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #00d4aa;
+        }
+
+        .sensor-card.danger .sensor-value { color: #ff3333; }
+        
+        .sensor-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .gemma-card {
+            margin: 0 20px 20px;
+            background: #111;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #1a1a1a;
+        }
+
+        .gemma-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .gemma-avatar {
+            width: 36px;
+            height: 36px;
+            background: #00d4aa;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .gemma-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #00d4aa;
+        }
+
+        .gemma-response {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #ccc;
+        }
+
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+
+        .ask-section {
+            margin: 0 20px 20px;
+        }
+
+        .ask-section h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .language-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .lang-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            background: #111;
+            color: #666;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lang-btn.active {
+            background: #00d4aa;
+            color: #000;
+            border-color: #00d4aa;
+            font-weight: 600;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .question-input {
+            flex: 1;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .question-input:focus { border-color: #00d4aa; }
+
+        .ask-btn {
+            background: #00d4aa;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 20px;
+            color: #000;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .mic-btn {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .mic-btn.recording {
+            background: #ff3333;
+            border-color: #ff3333;
+            animation: pulse 1s infinite;
+        }
+
+        .answer-card {
+            margin-top: 16px;
+            background: #0d1f1c;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #00d4aa33;
+            display: none;
+        }
+
+        .answer-card.show { display: block; }
+
+        .answer-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #ccc;
+        }
+
+        .history-section {
+            margin: 0 20px 100px;
+        }
+
+        .history-section h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .history-item {
+            background: #111;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-left: 3px solid #00d4aa;
+            font-size: 13px;
+        }
+
+        .history-item.alert-item { border-left-color: #ff3333; }
+
+        .history-time { color: #666; font-size: 11px; margin-bottom: 4px; }
+        .history-values { color: #ccc; margin-bottom: 4px; }
+        .history-response { color: #888; font-size: 12px; }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 20px;
+            background: #00d4aa;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px #00d4aa44;
+        }
+
+        .timestamp {
+            text-align: center;
+            font-size: 11px;
+            color: #444;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🐟 AquaMaame</h1>
+    <p>Watching your pond, so you don't have to</p>
+</div>
+
+<div class="status-bar">
+    <div class="status-dot"></div>
+    <span id="status-text">Monitoring pond...</span>
+</div>
+
+<div class="alert-banner" id="alert-banner">
+    ⚠️ DANGER DETECTED — Check your pond now!
+</div>
+
+<div class="sensors">
+    <div class="sensor-card" id="temp-card">
+        <div class="sensor-icon">🌡️</div>
+        <div class="sensor-value" id="temp-value">--</div>
+        <div class="sensor-label">Temp °C</div>
+    </div>
+    <div class="sensor-card" id="ph-card">
+        <div class="sensor-icon">⚗️</div>
+        <div class="sensor-value" id="ph-value">--</div>
+        <div class="sensor-label">pH Level</div>
+    </div>
+    <div class="sensor-card" id="do-card">
+        <div class="sensor-icon">💧</div>
+        <div class="sensor-value" id="do-value">--</div>
+        <div class="sensor-label">DO mg/L</div>
+    </div>
+</div>
+
+<div class="gemma-card">
+    <div class="gemma-header">
+        <div class="gemma-avatar">🤖</div>
+        <div>
+            <div class="gemma-name">AquaMaame AI</div>
+        </div>
+    </div>
+    <div class="gemma-response loading" id="gemma-response">
+        Analyzing your pond...
+    </div>
+</div>
+
+<div class="timestamp" id="timestamp"></div>
+
+<div class="ask-section">
+    <h3>Ask AquaMaame</h3>
+    <div class="language-toggle" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px;">
+        <button class="lang-btn active" id="btn-english" onclick="setLanguage('english')">🇬🇧 English</button>
+        <button class="lang-btn" id="btn-igbo" onclick="setLanguage('igbo')">🇳🇬 Igbo</button>
+        <button class="lang-btn" id="btn-yoruba" onclick="setLanguage('yoruba')">🇳🇬 Yoruba</button>
+        <button class="lang-btn" id="btn-hausa" onclick="setLanguage('hausa')">🇳🇬 Hausa</button>
+        <button class="lang-btn" id="btn-pidgin" onclick="setLanguage('pidgin')">🇳🇬 Pidgin</button>
+        <button class="lang-btn" id="btn-french" onclick="setLanguage('french')">🇫🇷 French</button>
+        <button class="lang-btn" id="btn-swahili" onclick="setLanguage('swahili')">🌍 Swahili</button>
+    </div>
+    <div class="input-row">
+        <input type="text" class="question-input" id="question-input" 
+               placeholder="Ask about your fish...">
+        <button class="mic-btn" id="mic-btn" onclick="toggleMic()">🎤</button>
+        <button class="ask-btn" onclick="askQuestion()">Ask</button>
+    </div>
+    <div class="answer-card" id="answer-card">
+        <div class="answer-text" id="answer-text"></div>
+    </div>
+</div>
+
+<div class="ask-section">
+    <h3>Pattern Analysis</h3>
+    <button class="ask-btn" style="width:100%" onclick="fetchPatterns()">
+        🔍 Analyze My Pond Patterns
+    </button>
+    <div class="answer-card" id="pattern-card">
+        <div class="answer-text" id="pattern-text"></div>
+    </div>
+</div>
+
+<div class="history-section">
+    <h3>Recent Readings</h3>
+    <div id="history-list"></div>
+</div>
+
+<button class="refresh-btn" onclick="fetchReading()">🔄</button>
+
+<script>
+    let currentLanguage = 'english';
+    let isRecording = false;
+    let recognition = null;
+
+    // ── Fetch live reading ────────────────────────────────
+    async function fetchReading() {
+        document.getElementById('status-text').textContent = 'Reading sensors...';
+        document.getElementById('gemma-response').textContent = 'AquaMaame is thinking...';
+        document.getElementById('gemma-response').className = 'gemma-response loading';
+
+        try {
+            const res = await fetch('/api/reading');
+            const data = await res.json();
+
+            // Update sensors
+            document.getElementById('temp-value').textContent = data.temperature;
+            document.getElementById('ph-value').textContent = data.ph;
+            document.getElementById('do-value').textContent = data.dissolved_oxygen;
+            document.getElementById('timestamp').textContent = 'Last updated: ' + data.timestamp;
+
+            // Color cards
+            colorCard('temp-card', data.temperature, 25, 30);
+            colorCard('ph-card', data.ph, 6.5, 8.0);
+            colorCard('do-card', data.dissolved_oxygen, 5, 10);
+
+            // Gemma response
+            document.getElementById('gemma-response').textContent = data.response;
+            document.getElementById('gemma-response').className = 'gemma-response';
+
+            // Alert
+            const banner = document.getElementById('alert-banner');
+            if (data.is_alert) {
+                banner.classList.add('show');
+                playAlertSound();
+            } else {
+                banner.classList.remove('show');
+            }
+
+            document.getElementById('status-text').textContent = 'Monitoring pond...';
+            addToHistory(data);
+
+        } catch (err) {
+            document.getElementById('gemma-response').textContent = 'Error connecting. Make sure AquaMaame server is running.';
+        }
+    }
+
+    function colorCard(cardId, value, min, max) {
+        const card = document.getElementById(cardId);
+        if (value < min || value > max) {
+            card.className = 'sensor-card danger';
+        } else {
+            card.className = 'sensor-card safe';
+        }
+    }
+
+    // ── Ask question ──────────────────────────────────────
+    async function askQuestion() {
+        const question = document.getElementById('question-input').value;
+        if (!question.trim()) return;
+
+        const answerCard = document.getElementById('answer-card');
+        const answerText = document.getElementById('answer-text');
+        answerCard.classList.add('show');
+        answerText.textContent = 'AquaMaame is thinking...';
+
+        try {
+            const res = await fetch('/api/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    question: question,
+                    language: currentLanguage 
+                })
+            });
+            const data = await res.json();
+            answerText.textContent = data.response;
+            speakResponse(data.response);
+        } catch (err) {
+            answerText.textContent = 'Error getting response.';
+        }
+    }
+
+    // ── Language toggle ───────────────────────────────────
+    function setLanguage(lang) {
+        currentLanguage = lang;
+        const buttons = ['english','igbo','yoruba','hausa','pidgin','french','swahili'];
+        buttons.forEach(b => {
+            const btn = document.getElementById('btn-' + b);
+            if (btn) btn.className = lang === b ? 'lang-btn active' : 'lang-btn';
+        });
+        const placeholders = {
+            english: 'Ask about your fish...',
+            igbo: 'Jụọ maka azụ gị...',
+            yoruba: 'Beere nipa ẹja rẹ...',
+            hausa: 'Tambaya game da kifin ku...',
+            pidgin: 'Ask about your fish dem...',
+            french: 'Posez une question sur vos poissons...',
+            swahili: 'Uliza kuhusu samaki wako...'
+        };
+        document.getElementById('question-input').placeholder = placeholders[lang] || 'Ask about your fish...';
+    }
+
+    // ── Voice input ───────────────────────────────────────
+    function toggleMic() {
+        if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+            alert('Voice not supported on this browser. Use Chrome.');
+            return;
+        }
+
+        if (isRecording) {
+            recognition.stop();
+            return;
+        }
+
+        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = currentLanguage === 'igbo' ? 'ig-NG' : 'en-NG';
+        recognition.continuous = false;
+
+        recognition.onstart = () => {
+            isRecording = true;
+            document.getElementById('mic-btn').className = 'mic-btn recording';
+            document.getElementById('mic-btn').textContent = '⏹️';
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('question-input').value = transcript;
+            askQuestion();
+        };
+
+        recognition.onend = () => {
+            isRecording = false;
+            document.getElementById('mic-btn').className = 'mic-btn';
+            document.getElementById('mic-btn').textContent = '🎤';
+        };
+
+        recognition.start();
+    }
+
+    // ── Text to speech ────────────────────────────────────
+    function speakResponse(text) {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = currentLanguage === 'igbo' ? 'ig-NG' : 'en-NG';
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    // ── Alert sound ───────────────────────────────────────
+    function playAlertSound() {
+        const ctx = new AudioContext();
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        oscillator.frequency.value = 880;
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 1);
+    }
+
+    // ── History ───────────────────────────────────────────
+    function addToHistory(data) {
+        const list = document.getElementById('history-list');
+        const item = document.createElement('div');
+        item.className = data.is_alert ? 'history-item alert-item' : 'history-item';
+        item.innerHTML = `
+            <div class="history-time">${data.timestamp}</div>
+            <div class="history-values">🌡️ ${data.temperature}°C &nbsp; ⚗️ pH ${data.ph} &nbsp; 💧 ${data.dissolved_oxygen} mg/L</div>
+            <div class="history-response">${data.response.substring(0, 100)}...</div>
+        `;
+        list.insertBefore(item, list.firstChild);
+    }
+
+    // ── Auto refresh every 30 seconds ────────────────────
+    fetchReading();
+    setInterval(fetchReading, 30000);
+
+    async function fetchPatterns() {
+    const card = document.getElementById('pattern-card');
+    const text = document.getElementById('pattern-text');
+    card.classList.add('show');
+    text.textContent = 'AquaMaame is analyzing your pond history...';
+    
+    const res = await fetch('/api/patterns');
+    const data = await res.json();
+    text.textContent = data.patterns;
+    speakResponse(data.patterns);
+}
+</script>
+
+</body>
+</html>
