@@ -1,4 +1,4 @@
-# 🐟 AquaMaame
+# AquaMaame
 ### *Watching your pond, so you don't have to*
 
 > **Offline-first AI fish pond monitoring system for African Local farmers**
